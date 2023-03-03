@@ -1,0 +1,77 @@
+---
+title: "Week2_Nadja I"
+output: html_document
+date: "2023-03-03"
+---
+
+
+```
+
+
+``````{r}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(ensembldb)
+  library(GenomicRanges)
+  library(epiwraps)
+})
+```
+```
+1. Using `AnnotationHub`, find and download the following annotations data:
+ - The mouse (Mus Musculus) EnsDb object, version 102, genome build GRCm38
+ - The mouse genome sequence ( dna_sm ) in TwoBit/2bit format for GRCm38
+ - The drosophila melanogaster genome sequence ( dna_sm ) in TwoBit/2bit format for BDGP6
+
+```{r}
+
+ah <- AnnotationHub()
+# to query the AH programmatically:
+#qmm <-query(ah, c("Mus Musculus", "ensembl"))
+#mus_musculus <- query()
+#mus_genome > query(ah, c("dna_sm", "ensembl"))
+#dm_genome > query(ah, c("dna_sm", "ensembl"))
+
+#display(ah)
+#The mouse (Mus Musculus) EnsDb object, version 102, genome build GRCm38
+mm_nnsb <- ah [["AH89211"]]
+mm_nnsb 
+#asembeled indexes version 102 mice
+# - The mouse genome sequence ( dna_sm ) in TwoBit/2bit format for GRCm38
+mm_genome_nsmb <- ah [["AH88477"]]
+mm_genome_nsmb
+#asembeled genomes2 bit format mice
+
+
+#drosophila
+#The drosophila melanogaster genome sequence ( dna_sm ) in TwoBit/2bit format for BDGP6
+dm_nsb <- ah[["AH95713"]]
+dm_nsb 
+
+qd <- query(ah, c("Drosophila", "ensembl"))
+d_mel <- query(ah, c ("dna"))
+
+```
+
+```{r}
+
+#a How many different ensembl gene IDs and gene symbols are there for protein-coding genes?
+
+exsPerTx <- exonsBy(mm_nnsb, column=c("tx_id","tx_biotype"), 
+                    filter=TxBiotypeFilter("protein_coding"))
+exons_mouse <- length(exsPerTx)
+mm_coding <- genes(mm_nnsb, filter= GeneBiotypeFilter("protein_coding"), columns= c("gene_id","symbol"))
+length(unique(mm_coding$gene_id)) #awnser 22287
+length(unique(mm_coding$symbol)) #awnser 21964
+
+#Plot the distribution of the (spliced) length of protein-coding transcripts
+#(tip: this will require you to extract exons of protein-coding transcripts from the database, and split them by transcript, before summing the width of the exons of each transcript)
+
+ExonsPerGene <-exonsBy(mm_nnsb, column=c("gene_id","gene_biotype"), 
+                    filter=TxBiotypeFilter("protein_coding"))
+histo<-width(ExonsPerGene)
+histo
+hist(sum(histo), breaks = 250)
+
+```
+
+
