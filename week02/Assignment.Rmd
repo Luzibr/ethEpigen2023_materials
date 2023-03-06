@@ -54,7 +54,7 @@ d_mel <- query(ah, c ("dna"))
 
 ```{r}
 
-#a How many different ensembl gene IDs and gene symbols are there for protein-coding genes?
+# How many different ensembl gene IDs and gene symbols are there for protein-coding genes?
 
 exsPerTx <- exonsBy(mm_nnsb, column=c("tx_id","tx_biotype"), 
                     filter=TxBiotypeFilter("protein_coding"))
@@ -68,9 +68,9 @@ length(unique(mm_coding$symbol)) #awnser 21964
 
 ExonsPerGene <-exonsBy(mm_nnsb, column=c("gene_id","gene_biotype"), 
                     filter=TxBiotypeFilter("protein_coding"))
-histo<-width(ExonsPerGene)
-histo
-hist(sum(histo), breaks = 250)
+spliced_length<-width(ExonsPerGene)
+
+hist(sum(spliced_length), breaks = 250)
 
 ```
 
