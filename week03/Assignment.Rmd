@@ -1,0 +1,90 @@
+---
+title: "Assignment Week 3"
+author: "Nadja Luz Ibrahim"
+date: "2023-03-10"
+output: html_document
+---
+
+```{r}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(Rsubread)
+  library(rtracklayer)
+  library(Biostrings)
+  library(Rfastp)
+  library(epiwraps)
+})
+ah <- AnnotationHub()
+#display(ah)
+```
+
+# Assignment Week 3 (This one took 3 laptop crashes a huge R failure and alot of neveres haha but i managed :D)
+
+# 1 Download the data
+
+```{r setup, include=FALSE}
+
+dir.create("assignment_data") #the folder where i am saving all the data for the assignment 
+options(timeout=6000) #options for getting the download
+download.file("https://www.encodeproject.org/files/ENCFF127RRR/@@download/ENCFF127RRR.fastq.gz", dest="assignment_data/CTCF.fastq.gz")
+
+```
+# 2 Process the Data 
+
+```{r}
+#creating a directory in my folder assignment data for the trimmed data
+dir.create("assignment_data/rfastp.trimmed")
+#Run quality control (qc) and trimming the data 
+qc <- Rfastp::rfastp("assignment_data/CTCF.fastq.gz", thread=4, overrepresentationAnalysis=TRUE,
+                 outputFastq="assignment_data/rfastp.trimmed/CTCF")
+
+#qc$summary
+
+```
+
+## 2.1 Bam File
+### 2.1.1 Genomde Index for Mapping 
+```{r}
+# we get the genome sequence from AnnotationHub
+genome <- ah[["AH49674"]]
+# we create a new directory that will contain the genome index
+dir.create("BDGP6_genome")
+# we write the genome sequence in fasta format
+export(import.2bit(genome), "BDGP6_genome/genome.fasta.gz", compress=TRUE)
+# we build a Rsubread index
+Rsubread::buildindex("BDGP6_genome/rsubread", reference="BDGP6_genome/genome.fasta.gz")
+
+```
+### 2.1.2 Alignment 
+
+```{r}
+dir.create("aligned") 
+align.stats <- Rsubread::align(index="BDGP6_genome/rsubread", type="dna",
+                               readfile1="assignment_data/rfastp.trimmed/CTCF_R1.fastq.gz",
+                               output_file=c("aligned/CTCF.bam"),
+                               nthreads=6, sortReadsByCoordinates=TRUE)
+align.stats 
+```
+
+# 3. How many reads and what percantage were mapped  
+3504769 mapped reads and a percentage of 91.82% were mapped 
+
+# 4 How many Peaks were found 
+
+```{r}
+dir.create("assignment_data/peaks/")
+#getting the peak file to find out how many peaks were found
+peaks <- callPeaks("aligned/CTCF.bam", fragLength=36L) #36 found in the qc report 
+# rtacklayer::export.bed(peaks, "assignment_data/peaks/CTCF_peaks.bed")
+length(peaks) #to see how many peaks were found 
+```
+2644 Peaks were found 
+
+# 5.Plot signal around the peaks
+
+```{r}
+head(peaks)
+region <- as.character(granges(peaks[13])) #plotting the region around peak 13 (my favourite number:D) 
+plotSignalTracks("aligned/CTCF.bam", region=region)
+```
+
