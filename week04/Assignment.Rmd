@@ -1,0 +1,71 @@
+---
+title: "Week4_Assignment"
+author: "Nadja Ibrahim"
+date: "2023-03-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(rtracklayer)
+  library(epiwraps)
+  library(GenomicRanges)
+})
+#ah <- AnnotationHub()
+```
+
+# Downloading the Data
+
+```{r download Chipseq Datasets}
+options(timeout=6000)
+
+#download p300 
+#https://www.encodeproject.org/files/ENCFF340DWL/
+download.file("https://www.encodeproject.org/files/ENCFF340DWL/@@download/ENCFF340DWL.bed.gz", "p300.narrowpeak")
+p300 <- rtracklayer::import("p300.narrowpeak")
+
+#download H3k4me3 
+#https://www.encodeproject.org/files/ENCFF247GVM/
+download.file("https://www.encodeproject.org/files/ENCFF247GVM/@@download/ENCFF247GVM.bed.gz", "H3K4me3.narrowpeak")
+H3K4me3.Peaks <- rtracklayer::import("H3K4me3.narrowpeak")
+
+#download H3K4me1
+#https://www.encodeproject.org/files/ENCFF718GBC/
+download.file("https://www.encodeproject.org/files/ENCFF718GBC/@@download/ENCFF718GBC.bed.gz", "H3K4me1.narrowpeak")
+H3K4me1.Peaks <- rtracklayer::import("H3K4me1.narrowpeak")
+
+#download Hk27ac
+#https://www.encodeproject.org/files/ENCFF585BJJ
+download.file("https://www.encodeproject.org/files/ENCFF585BJJ/@@download/ENCFF585BJJ.bed.gz", "H3K27ac.narrowpeak")
+H3K27ac.Peaks <- rtracklayer::import("H3K27ac.narrowpeak")
+
+#download HK27me3
+#https://www.encodeproject.org/files/ENCFF229LHV/
+download.file("https://www.encodeproject.org/files/ENCFF229LHV/@@download/ENCFF229LHV.bed.gz", "H3K27me3.narrowpeak")
+H3K27me3.Peaks <- rtracklayer::import("H3K27me3.narrowpeak")
+
+
+
+
+```
+
+# Calculating the Overlaps 
+```{r}
+#H3k4me3 overlaps with p300
+(overlaps_H3K4me3_prop <- round(sum(overlapsAny(p300,H3K4me3.Peaks )) / length(p300),3))
+#H3k4me1 overlaps with p300
+(overlaps_H3K4me1_prop <- round(sum(overlapsAny(p300, H3K4me1.Peaks)) / length(p300),3))
+#H3K27ac overlaps with p300
+(overlaps_H3K27ac_prop <- round(sum(overlapsAny(p300, H3K27ac.Peaks)) / length(p300),3))
+#H3K27me3 overlaps with p300
+(overlaps_H3K27me3_prop <- round(sum(overlapsAny(p300, H3K27me3.Peaks)) / length(p300),3))
+
+```
+
+
