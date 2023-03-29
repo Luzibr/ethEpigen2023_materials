@@ -396,6 +396,10 @@ table(overlapsAny(bivalent1, bivalent2))</code></pre>
 <pre><code>## 
 ## TRUE 
 ## 3219</code></pre>
+<pre class="r"><code>table(overlapsAny(bivalent2, bivalent1))</code></pre>
+<pre><code>## 
+## TRUE 
+## 4294</code></pre>
 <pre class="r"><code>intersec1 &lt;- list(bivalent.mESC=bivalent2, H3K4me3.smc=sets$H3K4me3.smc,
               H3K27me3.smc=sets$H3K27me3.smc)
 regionUpset(intersec1)</code></pre>

@@ -46,6 +46,7 @@ bivalent1 <- sets$H3K4me3.mESC[overlapsAny(sets$H3K4me3.mESC, sets$H3K27me3.mESC
 # Identifying the regions that are marked by both H3K4me3 and H3K27me3.
 bivalent2 <-intersect(sets$H3K4me3.mESC, sets$H3K27me3.mESC)
 table(overlapsAny(bivalent1, bivalent2))
+table(overlapsAny(bivalent2, bivalent1))
 
 intersec1 <- list(bivalent.mESC=bivalent2, H3K4me3.smc=sets$H3K4me3.smc,
               H3K27me3.smc=sets$H3K27me3.smc)
