@@ -1,0 +1,59 @@
+---
+title: "Assignment"
+author: "Nadja Ibrahim"
+date: "2023-03-29"
+output: html_document
+---
+```{r}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(ensembldb)
+  library(GenomicRanges)
+  library(epiwraps)
+  library(rtracklayer)
+  library(ggplot2)
+})
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Downloading the Data
+
+```{r}
+# embryonic stemm cell data
+dir.create("peaks")
+options(timeout=6000)
+download.file("https://www.encodeproject.org/files/ENCFF008XKX/@@download/ENCFF008XKX.bed.gz", "peaks/H3K27me3.mESC.bed.gz")
+download.file("https://www.encodeproject.org/files/ENCFF247GVM/@@download/ENCFF247GVM.bed.gz", "peaks/H3K4me3.mESC.bed.gz")
+
+# smooth muscle cell (smc) Data
+download.file("https://www.encodeproject.org/files/ENCFF044YOI/@@download/ENCFF044YOI.bed.gz", "peaks/H3K27me3.smc.bed.gz")
+download.file("https://www.encodeproject.org/files/ENCFF944EDY/@@download/ENCFF944EDY.bed.gz", "peaks/H3K4me3.smc.bed.gz")
+
+```
+# Peaks
+```{r}
+peakfiles <- list.files("peaks/", full=TRUE)
+names(peakfiles) <- gsub(".bed.gz", "", basename(peakfiles), fixed=TRUE)
+sets <- lapply(peakfiles, FUN=function(x) rtracklayer::import(x, format="narrowPeak"))
+```
+
+# Examining the intersection of bivalent histone mark regions in mouse embryonic stem cells with the peaks of H3K27me3 and H3K4me3 in smooth musxle cells cells
+```{r}
+# Locating the peaks of H3K4me3 that intersect with a domain of H3K27me3.
+bivalent1 <- sets$H3K4me3.mESC[overlapsAny(sets$H3K4me3.mESC, sets$H3K27me3.mESC)]
+# Identifying the regions that are marked by both H3K4me3 and H3K27me3.
+bivalent2 <-intersect(sets$H3K4me3.mESC, sets$H3K27me3.mESC)
+table(overlapsAny(bivalent1, bivalent2))
+
+intersec1 <- list(bivalent.mESC=bivalent2, H3K4me3.smc=sets$H3K4me3.smc,
+              H3K27me3.smc=sets$H3K27me3.smc)
+regionUpset(intersec1)
+regionUpset(intersec1, reference = bivalent2)
+```
+Out of the total 4294 mESC bivalent domains, 1743 domains are marked with H3K27me3 alone and not H3K4me3, indicating repression, while 1131 domains are marked with H3K4me3 alone and not H3K27me3, indicating activation. The remaining 236 domains maintain bivalency, marked by both H3K27me3 and H3K4me3.
+Upon differentiation, it can be observed that the majority of mESC bivalent domains, specifically 4058 out of 4294 domains, undergo either repression or activation (with a greater number undergoing repression) 
+
+
+
