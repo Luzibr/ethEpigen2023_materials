@@ -1,0 +1,98 @@
+---
+title: "Week 5 Assignment"
+author: "Nadja Ibrahim"
+date: "2023-03-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(ensembldb)
+  library(GenomicRanges)
+  library(epiwraps)
+  library(rtracklayer)
+  library(ggplot2)
+})
+```
+# Downloading Peaks from last exercise and the smooth muscle cells 
+```{r}
+options(timeout=6000)
+
+#download H3k4me3 
+#https://www.encodeproject.org/files/ENCFF247GVM/
+download.file("https://www.encodeproject.org/files/ENCFF247GVM/@@download/ENCFF247GVM.bed.gz", "H3K4me3.narrowpeak")
+H3K4me3.Peaks <- rtracklayer::import("H3K4me3.narrowpeak")
+
+#download HK27me3
+#https://www.encodeproject.org/files/ENCFF229LHV/
+download.file("https://www.encodeproject.org/files/ENCFF229LHV/@@download/ENCFF229LHV.bed.gz", "H3K27me3.narrowpeak")
+H3K27me3.Peaks <- rtracklayer::import("H3K27me3.narrowpeak")
+
+#download smooth muscle cell for H3K27me3
+download.file("https://www.encodeproject.org/files/ENCFF817CHW/@@download/ENCFF817CHW.bed.gz", dest="H3K27me3.bed.gz")
+H3K27me3.smc<- rtracklayer::import("H3K27me3.bed.gz", format="narrowPeak")
+head(H3K27me3.smc)
+
+#download smooth muscle cell for H3K4me3
+options(timeout=6000)
+download.file("https://www.encodeproject.org/files/ENCFF714BRC/@@download/ENCFF714BRC.bed.gz", dest="H3K4me3.bed.gz")
+H3K4me3.smc<- rtracklayer::import("H3K4me3.bed.gz", format="narrowPeak")
+head(H3K4me3.smc)
+```
+
+
+```{r}
+library(GenomicRanges)
+# Create GRanges objects for the peaks
+H3K4me3_GR <- GRanges(seqnames=H3K4me3.Peaks$chrom, ranges=IRanges(start=H3K4me3.Peaks$start, end=H3K4me3.Peaks$end))
+H3K27me3_GR <- GRanges(seqnames=H3K27me3.Peaks$chrom, ranges=IRanges(start=H3K27me3.Peaks$start, end=H3K27me3.Peaks$end))
+
+# Find bivalent regions
+bivalent_do <- H3K4me3_GR[which(overlapsAny(H3K4me3_GR, H3K27me3_GR))]
+
+# Number of bivalent regions
+length_bivalent <- length(bivalent_do)
+length_bivalent
+
+# Convert to data frame
+bivalent_df <- as.data.frame(bivalent_do)
+head(bivalent_df)
+```
+# Analysis of Overlap between mESC bivalent histone mark regions, and H3K27me3 and H3K4me3 peaks in smooth muscle cells 
+
+
+```{r}
+# Find bivalent peaks that overlap with H3K27me3 smooth muscle cell peaks
+bivalent.smc <- H3K27me3.smc[overlapsAny(H3K4me3.smc, H3K27me3.smc)]
+
+# Find overlapping peaks with bivalent domains for H3K27me3
+overlap_H3k27me3 <- findOverlaps(bivalent.smc, H3K27me3.smc)
+H3k27me3_overlap_domains <- unique(subjectHits(overlap_H3k27me3))
+n_overlap_H3k27me3 <- length(H3k27me3_overlap_domains)
+
+# Find overlapping peaks with bivalent domains for H3K4me3
+overlap_H3k4me3 <- findOverlaps(bivalent.smc, H3K4me3.smc)
+H3k4me3_overlap_domains <- unique(subjectHits(overlap_H3k4me3))
+n_overlap_H3k4me3 <- length(H3k4me3_overlap_domains)
+
+# Find overlapping peaks with bivalent domains for both H3K27me3 and H3K4me3
+overlap_both <- intersect(H3k27me3_overlap_domains, H3k4me3_overlap_domains)
+n_overlap_both <- length(overlap_both)
+
+# Calculate the number of mESC bivalent domains that overlap either mark or their combination
+n_overlap <- length(unique(c(H3k27me3_overlap_domains, H3k4me3_overlap_domains, overlap_both)))
+
+# Print the results
+cat("Number of bivalent peaks that overlap with H3K27me3 peaks:", n_overlap_H3k27me3, "\n")
+cat("Number of bivalent peaks that overlap with H3K4me3 peaks:", n_overlap_H3k4me3, "\n")
+cat("Number of bivalent peaks that overlap with both H3K27me3 and H3K4me3 peaks:", n_overlap_both, "\n")
+cat("Number of mESC bivalent domains that overlap either mark or their combination:", n_overlap, "\n")
+```
+
