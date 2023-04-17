@@ -1,0 +1,88 @@
+---
+title: "Assignment week 6"
+author: "Nadja Ibrahim"
+date: "2023-03-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(GenomicRanges)
+  library(memes)
+  library(MotifDb)
+  library(AnnotationHub)
+  library(Biostrings)
+  library(AnnotationHub)
+  library(universalmotif)
+  library(ggplot2)
+})
+
+meme_path <- "/Users/ETH/Downloads/meme-5.5.2/bin"
+```
+# Loading of REST TF from mus musculus 
+
+```{r data loading}
+dir.create("data")
+# https://www.encodeproject.org/experiments/ENCSR000AIS/
+download.file(url="https://www.encodeproject.org/files/ENCFF230MKM/@@download/ENCFF230MKM.bigBed", destfile="data/mouse_rest_tf.bigBed")
+peaks = rtracklayer::import("data/mouse_rest_tf.bigBed", format="bigBed")
+seqlevelsStyle(peaks) <- "Ensembl"
+
+```
+# Instance identification
+```{r recenting the sequence and obtaining information }
+peak_centers <- resize(peaks, fix="center", width=100)
+# display(ah)
+ah <- AnnotationHub(localHub=TRUE)
+genome <- ah[["AH88477"]]
+peaks_seqs <- memes::get_sequence(peak_centers, genome)
+peaks_seqs
+```
+# Scanning the Motif
+```{r searching for known motifs}
+motifs <- MotifDb::query(MotifDb, "REST")
+names(motifs)
+motif <- motifs[["Hsapiens-jaspar2018-REST-MA0138.1"]]
+view_motifs(motif)
+#Search the motif in peks from our data
+moi <- memes::runFimo(peaks_seqs,  convert_motifs(motif), meme_path = meme_path)
+length(peaks_seqs)
+length(moi)
+```
+
+#Genome scanning
+
+```{r, eval=FALSE}
+genome_scanning <- ah[["AH88477"]]
+mmusculus <- import(genome_scanning, "2bit", which = as(seqinfo(genome_scanning), "GenomicRanges"))
+# we subset to chromosome 1
+genome_chr1 <- mmusculus["1"]
+moi_genome <- memes::runFimo(genome_chr1,  convert_motifs(motif), meme_path = meme_path)
+saveRDS(moi_genome, file="data/genome_sequences.rds")
+```
+
+```{r}
+moi_genome <- readRDS(file="data/genome_sequences.rds")
+```
+
+# Result
+```{r}
+nmotifpeaks <- length(moi)
+npeaks <- length(peaks)
+nmotifpeaks_frac <- nmotifpeaks/npeaks
+n_motifs <- length(moi_genome)
+n_motifs_poverlaps1 <- sum(overlapsAny(moi_genome, peaks)) # how many elements of the genome motifs overlap our peaks
+n_motifs_poverlaps2 <- sum(overlapsAny(peaks, moi_genome)) # how many peaks overlap an identified motif
+n_motifs_frac <- n_motifs_poverlaps1 / n_motifs
+
+```
+# Awnser
+
+Of the `r npeaks` peaks, `r npeaks` (`r nmotifpeaks_frac*100`%) contain a motif.
+
+Of the `r n_motifs`  motif instances, `r n_motifs_poverlaps1` (`r n_motifs_frac*100`%) overlap a peak)
+
