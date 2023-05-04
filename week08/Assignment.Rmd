@@ -1,0 +1,85 @@
+---
+title: "Assignment Week 8"
+author: "Nadja Ibrahim"
+date: "2023-05-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(motifmatchr)
+  library(MotifDb)
+  library(universalmotif)
+  library(sechm)
+  library(BiocParallel)
+  library(ggplot2)
+  library(chromVAR) # for motif accessibility estimation
+  library(SummarizedExperiment) # data structure
+  library(limma) # for statistical analysis
+})
+register(SerialParam())
+```
+# Download the SE data and read it into a variable
+```{r}
+
+options(timeout = 6000)
+download.file("https://ethz-ins.org/content/mouse_mm38_hippocampus.peakCounts.SE.rds",
+              "mouse_hipopocampus_SE.rds", mode = "wb")
+se <- readRDS("mouse_hipopocampus_SE.rds")
+```
+# Define the sex and condition of the data
+```{r}
+colData(se)$sex <- c(rep("Female", 3), rep("Male", 3), rep("Female", 3), rep("Male", 3))
+colData(se)$condition <- c(rep("Control", 6), rep("FSS", 6))
+
+```
+
+# Load the genome and add GC bias to the data
+```{r}
+
+genome <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+seqlevelsStyle(se) <- "UCSC"
+se <- suppressWarnings(chromVAR::addGCBias(se, genome = genome))
+```
+
+# Find the peaks containing the genomes and compute deviations in accessibility for each set of peaks
+```{r}
+
+motifs <- query(MotifDb, c("Mmusculus", "HOCOMOCOv10"))
+motifs <- do.call(TFBSTools::PWMatrixList, setNames(
+           universalmotif::convert_motifs(motifs, class = "TFBSTools-PWMatrix"),
+           mcols(motifs)$providerName))
+moi <- suppressWarnings(motifmatchr::matchMotifs(motifs, subject = se, genome = genome))
+dev <- chromVAR::computeDeviations(object = se, annotations = moi,
+                                   background_peaks = getBackgroundPeaks(se, niterations = 1000))
+```
+
+# Compute the variablility of the deviations and plot the ranked variablities
+```{r}
+variability <- computeVariability(dev)
+plotVariability(variability)
+```
+# Add the normalized variability z scores to the dev table, define factors, and set up the model matrix using condition as coefficient
+```{r}
+assays(dev)$norm <- scale(assays(dev)$z)
+dev$condition <- factor(dev$condition)
+dev$condition <- relevel(dev$condition, "Control")
+mm_cond <- model.matrix(~dev$condition)
+```
+
+# Fit the linear model and get the stats using empirical Bayes moderation, extract the sorted list of the hits, and plot the top 50 hits
+```{r}
+
+fit_cond <- eBayes(lmFit(assays(dev)$norm, mm_cond))
+res_cond <- as.data.frame(topTable(fit_cond, coef = "dev$conditionFSS", number = Inf))
+res_cond$Names <- gsub("\\_.*", "", row.names(res_cond))
+ggplot(res_cond, aes(x = logFC, y = -log10(adj.P.Val), label = Names)) + geom_text() + theme_bw()
+top_cond <- head(res_cond[res_cond$adj.P.Val <= 0.5,], 50)
+sechm(dev, features = row.names(top_cond), assayName = "norm", top_annotation = c("condition", "depth"))
+```
+The results reveal a significant difference in the epigenomic behavior of the hippocampus between males and females, irrespective of their condition as per the conditions considered in the study. This is evident from the higher variability observed in the motif accessibility analysis, which indicates that there is a lot of variation in the accessibility of motifs between the two sexes. This variability is particularly striking when compared to the previous Control vs FSS analysis conducted.
