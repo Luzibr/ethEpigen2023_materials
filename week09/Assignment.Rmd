@@ -1,0 +1,38 @@
+---
+title: "Project Outline"
+author: "Nadja Ibrahim"
+date: "2023-05-10"
+output: html_document
+---
+# Exploratory investigation of off-target DSBs after Crispr-CAS9 gene editing 
+
+
+## Background
+CRISPR-Cas9 is a groundbreaking gene-editing technology that enables precise modifications of DNA sequences in living organisms. It utilizes a system comprising the Cas9 protein and a guide RNA (gRNA) to target specific DNA sequences. Once introduced into a cell, the Cas9-gRNA complex locates and binds to the targeted DNA, leading to the creation of double-strand breaks (DSBs) at precise locations within the DNA helix. These DSBs trigger cellular repair mechanisms.
+
+Cells possess two primary DNA repair pathways involved in CRISPR-Cas9 editing: non-homologous end joining (NHEJ) and homology-directed repair (HDR). NHEJ is the predominant pathway, which directly rejoins the broken DNA ends but often introduces small insertions or deletions (indels) at the DSB site, causing disruptions or mutations in the target gene. On the other hand, HDR utilizes a template DNA molecule to repair the DSB, allowing for precise alterations, such as introducing specific nucleotide changes or inserting new sequences. However, HDR is less frequently employed compared to NHEJ.
+
+### MRE11
+MRE11, a key protein in the MRE11-RAD50-NBS1 (MRN) complex, plays a critical role in targeting and processing double-strand breaks (DSBs) in DNA. The MRN complex serves as a sensor for DNA damage, rapidly binding to DSBs induced by CRISPR-Cas9 and other sources. Once bound, MRE11 initiates the repair process through its multifaceted functions.
+One of MRE11's primary roles is DNA end resection, wherein it trims the broken DNA ends, creating long 3' overhangs. This step is crucial for subsequent repair pathways, particularly homology-directed repair (HDR). MRE11 also activates the ATM kinase, recruiting it to the site of the DSB and initiating a signaling cascade that triggers cell cycle arrest and DNA repair.
+Furthermore, MRE11 interacts with other DNA repair proteins to coordinate the repair of DSBs. Its interaction with RAD50 forms a stable complex that tethers the DNA ends together, facilitating their processing. MRE11 also interacts with various proteins involved in non-homologous end joining (NHEJ) and HDR pathways, such as Ku70/Ku80 and RAD51, respectively, promoting their recruitment and activity at the site of the break.
+The involvement of MRE11 ensures proper targeting and processing of DSBs, contributing to the subsequent repair of damaged DNA. Understanding the role of MRE11 in DSB repair is crucial for harnessing its potential in gene editing technologies like CRISPR-Cas9 and advancing our knowledge of DNA repair mechanisms.
+
+Takeda S, Hoa NN, Sasanuma H. The role of the Mre11-Rad50-Nbs1 complex in double-strand break repair-facts and myths. J Radiat Res. 2016 Aug;57 Suppl 1(Suppl 1):i25-i32. doi: 10.1093/jrr/rrw034. Epub 2016 Jun 15. PMID: 27311583; PMCID: PMC4990115.
+
+## Topic of the Assignment 
+DISCOVER-seq is a method developed in the Corn Lab at ETH that facilitates the unbiased identification of off-target sites resulting from CRISPR-Cas genome editing. This approach capitalizes on the DNA repair mechanisms intrinsic to genome editing and employs chromatin immunoprecipitation followed by sequencing (ChIP-seq) to identify genomic regions that become bound by DNA repair proteins subsequent to the induction of a site-specific double-strand DNA break (DSB) using CRISPR-Cas9. The ChIP-seq analysis reveals distinctive binding patterns of these repair proteins, with MRE11 exhibiting remarkable efficacy in pinpointing sites of Cas activity at single-base resolution.
+DISCOVER-seq enables the direct identification of off-target effects within edited tissues, circumventing the need for separate experimental workflows.
+Wienert, B., Wyman, S.K., Yeh, C.D. et al. CRISPR off-target detection with DISCOVER-seq. Nat Protoc 15, 1775–1799 (2020). https://doi.org/10.1038/s41596-020-0309-5
+
+## Data of the assignment
+For this assignment we will get DISCOVER-seq Data from a PhD Student (Lily van de Venn) in the Corn Lab at ETH. The Data is focused on the MRI11 Protein 
+
+
+## Research Question 
+To investigate the existence of a systematic off target effect we will asses:
+1. Identity of off targets
+2. Look if they localize or follow a pattern/trend
+3. Analyse the results and check sequence properties 
+
+
